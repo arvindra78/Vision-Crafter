@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vision Crafter | AI Image Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #00c6ff;
+      --primary-dark: #009edf;
+      --secondary: #0072ff;
+      --bg-dark: #1e1e2f;
+      --bg-darker: #1a1a2a;
+      --bg-darkest: #161627;
+      --text-light: #ffffff;
+      --text-muted: #aaaaaa;
+      --border-dark: #2c2c3d;
+      --error: #ff6b6b;
+      --success: #4caf50;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-light);
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 20px 0;
+      font-size: 2rem;
+      color: var(--primary);
+    }
+
+    #chat-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .message {
+      max-width: 80%;
+      padding: 1rem;
+      border-radius: 15px;
+      word-wrap: break-word;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .user {
+      align-self: flex-end;
+      background-color: var(--secondary);
+      color: white;
+    }
+
+    .bot {
+      align-self: flex-start;
+      background-color: var(--bg-darker);
+      border: 1px solid var(--border-dark);
+    }
+
+    .image-container {
+      position: relative;
+      margin-top: 10px;
+      border-radius: 10px;
+      background-color: #000;
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bot img {
+      max-width: 100%;
+      max-height: 500px;
+      border-radius: 10px;
+      object-fit: contain;
+      transition: opacity 0.3s;
+    }
+
+    .bot img.loading {
+      opacity: 0.5;
+    }
+
+    .download-btn {
+      margin-top: 10px;
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background-color: var(--primary);
+      color: var(--text-light);
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .download-btn:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    .input-bar {
+      display: flex;
+      padding: 1rem;
+      background-color: var(--bg-darker);
+      border-top: 1px solid var(--border-dark);
+      position: sticky;
+      bottom: 0;
+    }
+
+    #prompt {
+      flex: 1;
+      padding: 0.8rem 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-dark);
+      outline: none;
+      font-size: 1rem;
+      background-color: var(--bg-darkest);
+      color: var(--text-light);
+      transition: border 0.2s;
+    }
+
+    #prompt:focus {
+      border-color: var(--primary);
+    }
+
+    #send-btn {
+      margin-left: 10px;
+      padding: 0 1.5rem;
+      background-color: var(--primary);
+      color: var(--text-light);
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    #send-btn:hover {
+      background-color: var(--primary-dark);
+    }
+
+    #send-btn:disabled {
+      background-color: var(--border-dark);
+      cursor: not-allowed;
+    }
+
+    .loader {
+      border: 4px solid rgba(255,255,255,0.2);
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 10px auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-message {
+      color: var(--error);
+      margin-top: 5px;
+    }
+
+    .success-message {
+      color: var(--success);
+    }
+
+    .retry-btn {
+      margin-top: 10px;
+      padding: 0.5rem 1rem;
+      background-color: var(--error);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .retry-btn:hover {
+      background-color: #e05555;
+    }
+
+    footer {
+      text-align: center;
+      padding: 10px;
+      font-size: 0.9rem;
+      background-color: var(--bg-darkest);
+      border-top: 1px solid var(--border-dark);
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    footer a:hover {
+      color: var(--primary-dark);
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+      .message {
+        max-width: 90%;
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+      }
+      
+      #prompt {
+        padding: 0.7rem;
+      }
+      
+      #send-btn {
+        padding: 0 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🚀 Vision Crafter</h1>
+
+  <div id="chat-container">
+    <div class="message bot" style="animation: none;">
+      <p>Welcome to Vision Crafter! Describe the image you'd like to generate.</p>
+      <p><small>Example: "A futuristic cityscape at sunset with flying cars"</small></p>
+    </div>
+  </div>
+
+  <div class="input-bar">
+    <input type="text" id="prompt" placeholder="Describe your image idea..." autofocus />
+    <button id="send-btn" onclick="generateImage()">Generate</button>
+  </div>
+
+  <footer>
+    Made with ❤️ by <a href="https://instagram.com/arvindra.verse" target="_blank">Arvindra Rajput</a>
+  </footer>
+
+  <script>
+    const chat = document.getElementById('chat-container');
+    const promptInput = document.getElementById('prompt');
+    const sendBtn = document.getElementById('send-btn');
+
+    // Scroll to bottom of chat
+    function scrollToBottom() {
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    // Create loading message
+    function createLoadingMessage(prompt) {
+      const loadingMsg = document.createElement('div');
+      loadingMsg.className = 'message bot';
+      loadingMsg.innerHTML = `
+        <p>Creating: "${prompt}"</p>
+        <div class="loader"></div>
+      `;
+      chat.appendChild(loadingMsg);
+      scrollToBottom();
+      return loadingMsg;
+    }
+
+    // Create error message with retry option
+    function createErrorMessage(message, prompt, loadingElement) {
+      loadingElement.innerHTML = '';
+      const errorHtml = `
+        <p>❌ ${message}</p>
+        <button class="retry-btn" onclick="retryGeneration('${prompt.replace(/'/g, "\\'")}')">Retry</button>
+      `;
+      loadingElement.innerHTML = errorHtml;
+      scrollToBottom();
+    }
+
+    // Retry generation function
+    function retryGeneration(prompt) {
+      promptInput.value = prompt;
+      generateImage();
+    }
+
+    // Create image message with loading state
+    function createImageMessage(imageUrl, prompt, loadingElement) {
+      loadingElement.innerHTML = '';
+      
+      const imgContainer = document.createElement('div');
+      imgContainer.innerHTML = `
+        <p>Here's your image: "${prompt}"</p>
+        <div class="image-container">
+          <img src="${imageUrl}" alt="${prompt}" class="loading" 
+               onload="this.classList.remove('loading')"
+               onerror="handleImageError(this, '${imageUrl.replace(/'/g, "\\'")}', '${prompt.replace(/'/g, "\\'")}')" />
+        </div>
+        <a href="${imageUrl}" download="vision-crafter-${Date.now()}.png" class="download-btn">
+          ⬇ Download Image
+        </a>
+      `;
+      loadingElement.appendChild(imgContainer);
+      scrollToBottom();
+    }
+
+    // Handle image loading errors
+    function handleImageError(imgElement, imageUrl, prompt) {
+      const container = imgElement.parentElement;
+      container.innerHTML = `
+        <p class="error-message">Failed to load image</p>
+        <button class="retry-btn" onclick="retryGeneration('${prompt.replace(/'/g, "\\'")}')">Retry</button>
+        <p><small>Or try <a href="${imageUrl}" target="_blank">opening in new tab</a></small></p>
+      `;
+    }
+
+    // Generate image function
+    async function generateImage() {
+      const prompt = promptInput.value.trim();
+      if (!prompt) {
+        promptInput.focus();
+        return;
+      }
+
+      // Add user message
+      const userMsg = document.createElement('div');
+      userMsg.className = 'message user';
+      userMsg.textContent = prompt;
+      chat.appendChild(userMsg);
+      scrollToBottom();
+
+      // Create loading message
+      const loadingMsg = createLoadingMessage(prompt);
+
+      // Disable inputs during generation
+      promptInput.value = '';
+      promptInput.disabled = true;
+      sendBtn.disabled = true;
+
+      try {
+        const startTime = Date.now();
+        
+        const response = await fetch('/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to generate image');
+        }
+
+        if (data.image_url) {
+          createImageMessage(data.image_url, prompt, loadingMsg);
+        } else {
+          createErrorMessage(data.error || 'No image was generated', prompt, loadingMsg);
+        }
+
+        console.log(`Generation took ${(Date.now() - startTime)/1000} seconds`);
+      } catch (error) {
+        console.error('Generation error:', error);
+        createErrorMessage(error.message || 'An error occurred. Please try again.', prompt, loadingMsg);
+      } finally {
+        // Re-enable inputs
+        promptInput.disabled = false;
+        sendBtn.disabled = false;
+        promptInput.focus();
+      }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      // Add event listener for Enter key
+      promptInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !sendBtn.disabled) {
+          e.preventDefault();
+          generateImage();
+        }
+      });
+
+      // Focus input on page load
+      promptInput.focus();
+    });
+  </script>
+</body>
+</html>
