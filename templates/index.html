@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Vision Crafter | AI Image Generator</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -31,10 +32,18 @@
     }
 
     h1 {
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
       margin: 20px 0;
       font-size: 2rem;
       color: var(--primary);
+    }
+
+    h1 img {
+      width: 32px;
+      height: 32px;
     }
 
     #chat-container {
@@ -216,28 +225,34 @@
       color: var(--primary-dark);
     }
 
-    /* Mobile responsiveness */
     @media (max-width: 768px) {
       .message {
         max-width: 90%;
       }
-      
+
       h1 {
         font-size: 1.5rem;
       }
-      
+
       #prompt {
         padding: 0.7rem;
       }
-      
+
       #send-btn {
         padding: 0 1rem;
+      }
+
+      h1 img {
+        width: 24px;
+        height: 24px;
       }
     }
   </style>
 </head>
 <body>
-  <h1>🚀 Vision Crafter</h1>
+  <h1>
+    🚀 Vision Crafter
+  </h1>
 
   <div id="chat-container">
     <div class="message bot" style="animation: none;">
@@ -260,12 +275,10 @@
     const promptInput = document.getElementById('prompt');
     const sendBtn = document.getElementById('send-btn');
 
-    // Scroll to bottom of chat
     function scrollToBottom() {
       chat.scrollTop = chat.scrollHeight;
     }
 
-    // Create loading message
     function createLoadingMessage(prompt) {
       const loadingMsg = document.createElement('div');
       loadingMsg.className = 'message bot';
@@ -278,7 +291,6 @@
       return loadingMsg;
     }
 
-    // Create error message with retry option
     function createErrorMessage(message, prompt, loadingElement) {
       loadingElement.innerHTML = '';
       const errorHtml = `
@@ -289,16 +301,13 @@
       scrollToBottom();
     }
 
-    // Retry generation function
     function retryGeneration(prompt) {
       promptInput.value = prompt;
       generateImage();
     }
 
-    // Create image message with loading state
     function createImageMessage(imageUrl, prompt, loadingElement) {
       loadingElement.innerHTML = '';
-      
       const imgContainer = document.createElement('div');
       imgContainer.innerHTML = `
         <p>Here's your image: "${prompt}"</p>
@@ -315,7 +324,6 @@
       scrollToBottom();
     }
 
-    // Handle image loading errors
     function handleImageError(imgElement, imageUrl, prompt) {
       const container = imgElement.parentElement;
       container.innerHTML = `
@@ -325,7 +333,6 @@
       `;
     }
 
-    // Generate image function
     async function generateImage() {
       const prompt = promptInput.value.trim();
       if (!prompt) {
@@ -333,24 +340,19 @@
         return;
       }
 
-      // Add user message
       const userMsg = document.createElement('div');
       userMsg.className = 'message user';
       userMsg.textContent = prompt;
       chat.appendChild(userMsg);
       scrollToBottom();
 
-      // Create loading message
       const loadingMsg = createLoadingMessage(prompt);
 
-      // Disable inputs during generation
       promptInput.value = '';
       promptInput.disabled = true;
       sendBtn.disabled = true;
 
       try {
-        const startTime = Date.now();
-        
         const response = await fetch('/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -358,7 +360,7 @@
         });
 
         const data = await response.json();
-        
+
         if (!response.ok) {
           throw new Error(data.error || 'Failed to generate image');
         }
@@ -368,22 +370,17 @@
         } else {
           createErrorMessage(data.error || 'No image was generated', prompt, loadingMsg);
         }
-
-        console.log(`Generation took ${(Date.now() - startTime)/1000} seconds`);
       } catch (error) {
         console.error('Generation error:', error);
         createErrorMessage(error.message || 'An error occurred. Please try again.', prompt, loadingMsg);
       } finally {
-        // Re-enable inputs
         promptInput.disabled = false;
         sendBtn.disabled = false;
         promptInput.focus();
       }
     }
 
-    // Initialize
     document.addEventListener('DOMContentLoaded', () => {
-      // Add event listener for Enter key
       promptInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !sendBtn.disabled) {
           e.preventDefault();
@@ -391,7 +388,6 @@
         }
       });
 
-      // Focus input on page load
       promptInput.focus();
     });
   </script>
