@@ -127,6 +127,7 @@
       border-top: 1px solid var(--border-dark);
       position: sticky;
       bottom: 0;
+      gap: 10px;
     }
 
     #prompt {
@@ -145,9 +146,8 @@
       border-color: var(--primary);
     }
 
-    #send-btn {
-      margin-left: 10px;
-      padding: 0 1.5rem;
+    button {
+      padding: 0 1rem;
       background-color: var(--primary);
       color: var(--text-light);
       font-weight: bold;
@@ -157,11 +157,11 @@
       transition: all 0.2s;
     }
 
-    #send-btn:hover {
+    button:hover {
       background-color: var(--primary-dark);
     }
 
-    #send-btn:disabled {
+    button:disabled {
       background-color: var(--border-dark);
       cursor: not-allowed;
     }
@@ -238,8 +238,8 @@
         padding: 0.7rem;
       }
 
-      #send-btn {
-        padding: 0 1rem;
+      button {
+        padding: 0 0.8rem;
       }
 
       h1 img {
@@ -250,20 +250,19 @@
   </style>
 </head>
 <body>
-  <h1>
-    🚀 Vision Crafter
-  </h1>
+  <h1>🚀 Vision Crafter</h1>
 
   <div id="chat-container">
     <div class="message bot" style="animation: none;">
-      <p>Welcome to Vision Crafter! Describe the image you'd like to generate.</p>
+      <p>Welcome to Vision Crafter! Describe your image idea or use ✨ Enhance Prompt for better results.</p>
       <p><small>Example: "A futuristic cityscape at sunset with flying cars"</small></p>
     </div>
   </div>
 
   <div class="input-bar">
     <input type="text" id="prompt" placeholder="Describe your image idea..." autofocus />
-    <button id="send-btn" onclick="generateImage()">Generate</button>
+    <button id="enhance-btn" onclick="enhancePrompt()">✨ Enhance</button>
+    <button id="send-btn" onclick="generateImage()">🎨 Generate</button>
   </div>
 
   <footer>
@@ -274,6 +273,7 @@
     const chat = document.getElementById('chat-container');
     const promptInput = document.getElementById('prompt');
     const sendBtn = document.getElementById('send-btn');
+    const enhanceBtn = document.getElementById('enhance-btn');
 
     function scrollToBottom() {
       chat.scrollTop = chat.scrollHeight;
@@ -333,6 +333,31 @@
       `;
     }
 
+    async function enhancePrompt() {
+      const raw = promptInput.value.trim();
+      if (!raw) return;
+
+      enhanceBtn.disabled = true;
+      try {
+        const res = await fetch("/enhance", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({prompt: raw})
+        });
+        const data = await res.json();
+        if (data.enhanced_prompt) {
+          promptInput.value = data.enhanced_prompt;
+        } else {
+          alert(data.error || "Failed to enhance");
+        }
+      } catch (err) {
+        alert("Error enhancing prompt");
+      } finally {
+        enhanceBtn.disabled = false;
+        promptInput.focus();
+      }
+    }
+
     async function generateImage() {
       const prompt = promptInput.value.trim();
       if (!prompt) {
@@ -351,6 +376,7 @@
       promptInput.value = '';
       promptInput.disabled = true;
       sendBtn.disabled = true;
+      enhanceBtn.disabled = true;
 
       try {
         const response = await fetch('/generate', {
@@ -376,6 +402,7 @@
       } finally {
         promptInput.disabled = false;
         sendBtn.disabled = false;
+        enhanceBtn.disabled = false;
         promptInput.focus();
       }
     }
@@ -387,7 +414,6 @@
           generateImage();
         }
       });
-
       promptInput.focus();
     });
   </script>
