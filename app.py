@@ -14,10 +14,8 @@ logger = logging.getLogger(__name__)
 client = Together(api_key="tgp_v1_UEGfPv24aifWIfPxHeeOtrdjg5YYlrdSISLoDh5NGX4")
 
 def is_valid_together_url(url):
-    """Check if the URL is from Together.ai's domain"""
     try:
         parsed = urlparse(url)
-        # Allow Together.ai short URLs (shrt) and their CDN URLs
         return parsed.netloc.endswith('together.ai') and (
             parsed.path.startswith('/shrt/') or 
             parsed.path.startswith('/files/')
@@ -26,24 +24,16 @@ def is_valid_together_url(url):
         return False
 
 def sanitize_image_url(url):
-    """Ensure the URL has proper https protocol and is valid."""
     if not url:
         return None
-        
-    # Fix common URL issues
     if url.startswith('https:/') and not url.startswith('https://'):
         url = url.replace('https:/', 'https://')
-    
-    # Ensure proper https protocol
     if not url.startswith(('http://', 'https://')):
         url = f'https://{url}'
-    
     return url if is_valid_together_url(url) else None
 
 def verify_image_url(url):
-    """Verify the URL actually returns an image"""
     try:
-        # Send HEAD request to check content type without downloading
         response = requests.head(url, timeout=5, allow_redirects=True)
         if response.status_code == 200:
             content_type = response.headers.get('content-type', '')
@@ -55,23 +45,58 @@ def verify_image_url(url):
 
 @app.route('/')
 def index():
-    """Render the main page."""
     return render_template('index.html')
 
-@app.route('/generate', methods=['POST'])
-def generate_image():
-    """Generate image from text prompt using Together API."""
+@app.route('/enhance', methods=['POST'])
+def enhance_prompt():
+    """Enhance user prompt using Together text model"""
     data = request.get_json()
     prompt = data.get("prompt", "").strip()
 
     if not prompt:
-        logger.warning("Empty prompt received")
+        return jsonify({"error": "Please enter a prompt"}), 400
+
+    try:
+        logger.info(f"Enhancing prompt: {prompt}")
+
+        response = client.chat.completions.create(
+    model="lgai/exaone-3-5-32b-instruct",
+    messages=[
+        {
+            "role": "system",
+            "content": (
+                "You are a prompt enhancer for AI image generation. "
+                "Expand the user’s short input into a clean, natural, descriptive sentence. "
+                "Do not use markdown, headings, bullet points, or labels like 'Subject', 'Description'. "
+                "Output should be a single descriptive prompt only."
+            )
+        },
+        {"role": "user", "content": prompt}
+    ],
+    max_tokens=120
+)
+
+
+        enhanced_prompt = response.choices[0].message.content.strip()
+        logger.info(f"Enhanced prompt: {enhanced_prompt}")
+
+        return jsonify({"enhanced_prompt": enhanced_prompt})
+
+    except Exception as e:
+        logger.error(f"Error enhancing prompt: {str(e)}", exc_info=True)
+        return jsonify({"error": "Failed to enhance prompt", "details": str(e)}), 500
+
+@app.route('/generate', methods=['POST'])
+def generate_image():
+    data = request.get_json()
+    prompt = data.get("prompt", "").strip()
+
+    if not prompt:
         return jsonify({"error": "Please enter a description for your image"}), 400
 
     try:
         logger.info(f"Generating image for prompt: {prompt}")
         
-        # Generate image using Together API
         response = client.images.generate(
             prompt=prompt,
             model="black-forest-labs/FLUX.1-schnell-Free",
@@ -79,36 +104,18 @@ def generate_image():
             n=1
         )
 
-        logger.debug(f"API Response: {response}")
-
         if not response.data or not response.data[0].url:
-            logger.error("No image URL in API response")
-            return jsonify({"error": "The API didn't return an image. Please try again."}), 500
+            return jsonify({"error": "No image URL returned"}), 500
 
-        # Sanitize the image URL
         image_url = sanitize_image_url(response.data[0].url)
-        
-        if not image_url:
-            logger.error(f"Invalid image URL format received: {response.data[0].url}")
-            return jsonify({"error": "Received an invalid image URL format from the API."}), 500
+        if not image_url or not verify_image_url(image_url):
+            return jsonify({"error": "Invalid image URL"}), 500
 
-        # Verify the URL actually points to an image
-        if not verify_image_url(image_url):
-            logger.error(f"URL doesn't point to valid image: {image_url}")
-            return jsonify({"error": "The generated image URL is not accessible. Please try again."}), 500
-
-        logger.info(f"Successfully generated image at: {image_url}")
-        return jsonify({
-            "image_url": image_url,
-            "prompt": prompt  # Return the prompt for reference
-        })
+        return jsonify({"image_url": image_url, "prompt": prompt})
 
     except Exception as e:
         logger.error(f"Error generating image: {str(e)}", exc_info=True)
-        return jsonify({
-            "error": "Failed to generate image. Please try again later.",
-            "details": str(e)
-        }), 500
+        return jsonify({"error": "Failed to generate image", "details": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
