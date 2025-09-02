@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify, render_template, send_from_directory
-from together import Together
+import together
 import logging
 from urllib.parse import urlparse
 import requests
+import os
 
 app = Flask(__name__)
 
@@ -18,7 +19,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Together API client
-client = Together(api_key="tgp_v1_UEGfPv24aifWIfPxHeeOtrdjg5YYlrdSISLoDh5NGX4")
+try:
+    together.api_key = "tgp_v1_UEGfPv24aifWIfPxHeeOtrdjg5YYlrdSISLoDh5NGX4"
+    client = together.Together()
+except Exception as e:
+    logger.error(f"Failed to initialize Together client: {str(e)}")
+    raise
 
 def is_valid_together_url(url):
     try:
@@ -128,6 +134,11 @@ def generate_image():
 def serve_farcaster_manifest():
     return send_from_directory('.', 'farcaster.json', mimetype='application/json')
 
+@app.route('/manifest.json')
+def serve_manifest():
+    return send_from_directory('.', 'manifest.json', mimetype='application/json')
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
+
 
