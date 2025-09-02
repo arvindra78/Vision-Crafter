@@ -1,0 +1,14 @@
+{
+  "name": "VisionCrafter",
+  "description": "An AI-powered mini app for creative onchain content.",
+  "url": "https://visioncrafter-y2x9.onrender.com",
+  "iconUrl": "https://visioncrafter-y2x9.onrender.com/icon.png",
+  "developer": {
+    "name": "Arvindra Rajput",
+    "url": "https://yourwebsite.com"
+  },
+  "categories": ["AI", "Creativity", "Onchain Tools"],
+  "permissions": ["wallet_connect", "sign_message"],
+  "version": "1.0.0",
+  "schema": "https://base.org/miniapp-manifest-schema.json"
+}
