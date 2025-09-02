@@ -1,7 +1,14 @@
 {
-  "accountAssociation": {},
-  "frame": {},
+  "accountAssociation": {
+    "signature": "",
+    "address": "0x723068d6AA8bE4eD97311455066d0E6a0c9A0729"
+  },
+  "frame": {
+    "version": "0.0.1"
+  },
   "baseBuilder": {
-    "allowedAddresses": ["0x723068d6AA8bE4eD97311455066d0E6a0c9A0729"]
+    "allowedAddresses": [
+      "0x723068d6AA8bE4eD97311455066d0E6a0c9A0729"
+    ]
   }
 }
