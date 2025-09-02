@@ -6,6 +6,13 @@ import requests
 
 app = Flask(__name__)
 
+# Base builder configuration
+BASE_BUILDER_CONFIG = {
+    "baseBuilder": {
+        "allowedAddresses": ["0x723068d6AA8bE4eD97311455066d0E6a0c9A0729"]
+    }
+}
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
