@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from together import Together
 import logging
 from urllib.parse import urlparse
@@ -124,5 +124,10 @@ def generate_image():
         logger.error(f"Error generating image: {str(e)}", exc_info=True)
         return jsonify({"error": "Failed to generate image", "details": str(e)}), 500
 
+@app.route('/farcaster.json')
+def serve_farcaster_manifest():
+    return send_from_directory('.', 'farcaster.json', mimetype='application/json')
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
+
