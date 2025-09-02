@@ -1,14 +1,15 @@
 {
   "accountAssociation": {
-    "signature": "",
-    "address": "0x723068d6AA8bE4eD97311455066d0E6a0c9A0729"
+    "signature": "16cbd01828b7dd6d3d59f07738ad625f07c24f4a140c53937d18d1a52bf339d65dbf7f5d4808b5522142c5875bc058e198f2ae5c751185fcd19cf3a4398593f61b",
+    "address": "0xA8875bD4680cd48006FA5FcA913f64B99CDEAAf5"
   },
   "frame": {
     "version": "0.0.1"
   },
   "baseBuilder": {
     "allowedAddresses": [
-      "0x723068d6AA8bE4eD97311455066d0E6a0c9A0729"
+      "0x723068d6AA8bE4eD97311455066d0E6a0c9A0729",
+      "0xA8875bD4680cd48006FA5FcA913f64B99CDEAAf5"
     ]
   }
 }
